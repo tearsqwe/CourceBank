@@ -54,6 +54,9 @@ class RegistrationActivity : AppCompatActivity() {
                 userPassRepeat.text.clear()
 
                 userManager.closeDB()
+                val intent = Intent(this, CardActivity::class.java)
+                intent.putExtra("USER_ID", newUserId)
+                startActivity(intent)
             }
         }
 

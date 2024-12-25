@@ -9,11 +9,18 @@ class DBHelper(context: Context)
     override fun onCreate(db: SQLiteDatabase?) {
         val query= UserObject.SQL_CREATE_ENTRIES
         db?.execSQL(query)
+        val queryCard= CardObject.SQL_CREATE_ENTRIES
+        db?.execSQL((queryCard))
+        println("onCreate called: Tables created successfully.")
     }
 
     override fun onUpgrade(db: SQLiteDatabase?, oldVersion: Int, newVersion: Int) {
+        println("onUpgrade called: Upgrading database from version $oldVersion to $newVersion.")
         val query = UserObject.SQL_DELETE_ENTRIES
         db!!.execSQL(query)
+        val queryCard=CardObject.SQL_DELETE_ENTRIES
+        db!!.execSQL(queryCard)
+        onCreate(db)
     }
 
 }
