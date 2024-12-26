@@ -32,9 +32,10 @@ class AuthorizationActivity : AppCompatActivity() {
 
             val user = userManager.authenticateUser(login, password)
             if (user != null) {
-                Log.d("AuthLog", "Пользователь ${user.name} авторизован")
+                Log.d("AuthLog", "Пользователь ${user.name} авторизован, ${user.id}")
                 val intent = Intent(this, MainActivity::class.java)
-                intent.putExtra("USER_NAME", user.name) // Передаем имя пользователя
+                intent.putExtra("USER_NAME", user.name)
+                intent.putExtra("USER_ID",user.id)// Передаем имя пользователя
                 startActivity(intent)
             } else {
                 Log.e("AuthLog", "Ошибка авторизации: Неверный логин или пароль")

@@ -68,5 +68,52 @@ class UserManager(context: Context) {
         }
         return null
     }
+    fun isUserExistsById(userId: Int): Boolean {
+        val cursor = db?.rawQuery("SELECT * FROM ${UserObject.TABLE_NAME} WHERE ${BaseColumns._ID} = ?", arrayOf(userId.toString()))
+        val exists = cursor?.count ?: 0 > 0
+        cursor?.close()
+        return exists
+    }
+
+    fun transferFunds(senderId: Int, recipientId: Int, amount: Double): Boolean {
+        db?.beginTransaction()
+        try {
+            // Получаем текущий баланс отправителя
+            val senderCursor = db?.rawQuery(
+                "SELECT ${CardObject.COLUMN_NAME_BALANCE} FROM ${CardObject.TABLE_NAME} WHERE ${CardObject.COLUMN_NAME_USER_ID} = ?",
+                arrayOf(senderId.toString())
+            )
+            if (senderCursor?.moveToFirst() == true) {
+                val senderBalance = senderCursor.getDouble(senderCursor.getColumnIndexOrThrow(CardObject.COLUMN_NAME_BALANCE))
+                if (senderBalance >= amount) {
+                    // Обновляем баланс отправителя
+                    db?.execSQL(
+                        "UPDATE ${CardObject.TABLE_NAME} SET ${CardObject.COLUMN_NAME_BALANCE} = ${CardObject.COLUMN_NAME_BALANCE} - ? WHERE ${CardObject.COLUMN_NAME_USER_ID} = ?",
+                        arrayOf(amount.toString(), senderId.toString())
+                    )
+                    // Обновляем баланс получателя
+                    db?.execSQL(
+                        "UPDATE ${CardObject.TABLE_NAME} SET ${CardObject.COLUMN_NAME_BALANCE} = ${CardObject.COLUMN_NAME_BALANCE} + ? WHERE ${CardObject.COLUMN_NAME_USER_ID} = ?",
+                        arrayOf(amount.toString(), recipientId.toString())
+                    )
+                    db?.setTransactionSuccessful()
+                    return true
+                }
+            }
+            senderCursor?.close()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        } finally {
+            db?.endTransaction()
+        }
+        return false
+    }
+    fun getUserBalance(userId: Int): Double {
+        val cursor = db?.rawQuery("SELECT SUM(${CardObject.COLUMN_NAME_BALANCE}) FROM ${CardObject.TABLE_NAME} WHERE ${CardObject.COLUMN_NAME_USER_ID} = ?", arrayOf(userId.toString()))
+        cursor?.moveToFirst()
+        val balance = cursor?.getDouble(0) ?: 0.0
+        cursor?.close()
+        return balance
+    }
 
 }
